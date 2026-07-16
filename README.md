@@ -34,7 +34,7 @@ pnpm preview
 ```
 portfolio/
 ├── public/                     # 静态资源
-│   ├── hero-video.mp4          # 首屏全屏背景视频（部署优化版，约 25MB）
+│   ├── hero-video.mp4          # 首屏全屏背景视频（Cloudflare 优化版，约 16MB）
 │   ├── about-portrait.png      # About 板块人物照片
 │   ├── watch-*.mp4             # 12 个项目展示视频
 │   └── gallery/                # Gallery 精选图片（14 张 JPG）
@@ -131,7 +131,7 @@ transitionDuration: {
 
 ## 注意事项
 
-- `public/` 中保留 12 个实际使用的视频和 14 张精选图片，上线静态资源约 270MB
+- `public/` 中保留 12 个实际使用的视频和 14 张精选图片，构建产物约 218MB，单文件均低于 25MB
 - 原始首屏视频、未使用视频和画廊原图保存在项目旁的素材备份目录，不参与构建
 - 未使用的旧组件、历史数据和依赖已从上线项目中移出，并保存在素材备份目录
 - 具体部署方式见 `DEPLOY.md`
