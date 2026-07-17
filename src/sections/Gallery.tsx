@@ -1,7 +1,9 @@
 import { useScrollReveal } from '@/hooks/useScrollReveal'
 
 interface CuratedImage {
-  src: string
+  id: string
+  width: number
+  height: number
   title: string
   titleCn: string
   position?: string
@@ -10,37 +12,44 @@ interface CuratedImage {
 const ASSET_BASE = import.meta.env.BASE_URL
 
 const CURATED_IMAGES: CuratedImage[] = [
-  { src: `${ASSET_BASE}gallery/001.jpg`, title: 'Global Arena', titleCn: '世界杯系列', position: 'center 42%' },
-  { src: `${ASSET_BASE}gallery/031.jpg`, title: 'Emerald Guilloché', titleCn: '碧波绿玑镂盘面' },
-  { src: `${ASSET_BASE}gallery/042.jpg`, title: 'Genghis Khan', titleCn: '成吉思汗' },
-  { src: `${ASSET_BASE}gallery/028.jpg`, title: 'Automatic Movement', titleCn: '自动上链机芯' },
-  { src: `${ASSET_BASE}gallery/043.jpg`, title: 'Arcade Dial', titleCn: '水果街机盘面' },
-  { src: `${ASSET_BASE}gallery/056.jpg`, title: 'Play in Motion', titleCn: '街机腕间场景', position: 'center 58%' },
-  { src: `${ASSET_BASE}gallery/065.jpg`, title: 'Enamel Snake', titleCn: '珐琅蛇' },
-  { src: `${ASSET_BASE}gallery/069.jpg`, title: 'Enamel Architecture', titleCn: '珐琅蛇立体结构' },
-  { src: `${ASSET_BASE}gallery/072.jpg`, title: 'Luminous Serpent', titleCn: '夜光蛇影' },
-  { src: `${ASSET_BASE}gallery/075.jpg`, title: 'Hammered Bronze', titleCn: '棕色锤纹盘面' },
-  { src: `${ASSET_BASE}gallery/086.jpg`, title: 'Violet Rhythm', titleCn: '紫色锤纹盘面' },
-  { src: `${ASSET_BASE}gallery/103.jpg`, title: 'Monochrome Texture', titleCn: '黑色锤纹盘面' },
-  { src: `${ASSET_BASE}gallery/082.jpg`, title: 'Sculpted Bracelet', titleCn: '锤纹一体式表链' },
-  { src: `${ASSET_BASE}gallery/092.jpg`, title: 'Blue Resonance', titleCn: '蓝色锤纹盘面' },
+  { id: '001', width: 790, height: 1600, title: 'Global Arena', titleCn: '世界杯系列', position: 'center 42%' },
+  { id: '031', width: 790, height: 2360, title: 'Emerald Guilloché', titleCn: '碧波绿玑镂盘面' },
+  { id: '042', width: 790, height: 1480, title: 'Genghis Khan', titleCn: '成吉思汗' },
+  { id: '028', width: 790, height: 1340, title: 'Automatic Movement', titleCn: '自动上链机芯' },
+  { id: '043', width: 790, height: 1820, title: 'Arcade Dial', titleCn: '水果街机盘面' },
+  { id: '056', width: 790, height: 1600, title: 'Play in Motion', titleCn: '街机腕间场景', position: 'center 58%' },
+  { id: '065', width: 790, height: 1700, title: 'Enamel Snake', titleCn: '珐琅蛇' },
+  { id: '069', width: 790, height: 1520, title: 'Enamel Architecture', titleCn: '珐琅蛇立体结构' },
+  { id: '072', width: 790, height: 1640, title: 'Luminous Serpent', titleCn: '夜光蛇影' },
+  { id: '075', width: 790, height: 2060, title: 'Hammered Bronze', titleCn: '棕色锤纹盘面' },
+  { id: '086', width: 790, height: 2140, title: 'Violet Rhythm', titleCn: '紫色锤纹盘面' },
+  { id: '103', width: 790, height: 2060, title: 'Monochrome Texture', titleCn: '黑色锤纹盘面' },
+  { id: '082', width: 790, height: 2060, title: 'Sculpted Bracelet', titleCn: '锤纹一体式表链' },
+  { id: '092', width: 790, height: 2060, title: 'Blue Resonance', titleCn: '蓝色锤纹盘面' },
 ]
 
 interface GalleryCardProps {
   image: CuratedImage
   index: number
   className: string
-  eager?: boolean
 }
 
-function GalleryCard({ image, index, className, eager = false }: GalleryCardProps) {
+function GalleryCard({ image, index, className }: GalleryCardProps) {
+  const imageBase = `${ASSET_BASE}gallery/${image.id}`
+
   return (
     <figure className={`group relative overflow-hidden rounded-2xl bg-[#0a0a0a] ${className}`}>
       <img
-        src={image.src}
+        src={`${imageBase}.webp`}
+        srcSet={`${imageBase}-640.webp 640w, ${imageBase}.webp ${image.width}w`}
+        sizes="(max-width: 1023px) calc(100vw - 4rem), (max-width: 1440px) 55vw, 790px"
         alt={`${image.title} · ${image.titleCn}`}
-        loading={eager ? 'eager' : 'lazy'}
-        className="h-full w-full object-cover transition-transform duration-1000 ease-smooth group-hover:scale-[1.035]"
+        width={image.width}
+        height={image.height}
+        loading="lazy"
+        decoding="async"
+        onLoad={(event) => event.currentTarget.classList.add('optimized-image--loaded')}
+        className="optimized-image h-full w-full object-cover group-hover:scale-[1.035]"
         style={{ objectPosition: image.position ?? 'center' }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/5 to-black/10" />
@@ -95,9 +104,9 @@ export function Gallery() {
         <div className={`mt-14 space-y-6 lg:space-y-8 reveal ${isVisible ? 'reveal--visible' : ''}`} data-delay="3">
           {/* Opening composition: one dominant image, two counterpoints */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-            <GalleryCard image={CURATED_IMAGES[0]} index={0} eager className="lg:col-span-8 h-[520px] lg:h-[720px]" />
+            <GalleryCard image={CURATED_IMAGES[0]} index={0} className="lg:col-span-8 h-[520px] lg:h-[720px]" />
             <div className="lg:col-span-4 lg:h-[720px] grid grid-rows-2 gap-6 lg:gap-8">
-              <GalleryCard image={CURATED_IMAGES[1]} index={1} eager className="h-[340px] lg:h-auto min-h-0" />
+              <GalleryCard image={CURATED_IMAGES[1]} index={1} className="h-[340px] lg:h-auto min-h-0" />
               <GalleryCard image={CURATED_IMAGES[2]} index={2} className="h-[340px] lg:h-auto min-h-0" />
             </div>
           </div>

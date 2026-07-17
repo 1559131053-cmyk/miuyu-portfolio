@@ -1,10 +1,43 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useScrollReveal } from '@/hooks/useScrollReveal'
 import TextPressure from '@/components/TextPressure'
 
 export function Hero() {
   const { ref, isVisible } = useScrollReveal<HTMLDivElement>({ threshold: 0.1 })
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
   const [videoReady, setVideoReady] = useState(false)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    let loadTimer: ReturnType<typeof setTimeout> | undefined
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+
+        observer.disconnect()
+        // Give the poster and critical UI a frame to paint before requesting video.
+        loadTimer = setTimeout(() => setShouldLoadVideo(true), 350)
+      },
+      { threshold: 0.01 }
+    )
+
+    observer.observe(video)
+    return () => {
+      observer.disconnect()
+      if (loadTimer) clearTimeout(loadTimer)
+    }
+  }, [])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !shouldLoadVideo) return
+
+    video.load()
+    video.play().catch(() => undefined)
+  }, [shouldLoadVideo])
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
@@ -18,29 +51,50 @@ export function Hero() {
     >
       {/* === Full-Screen Video Background (full color) === */}
       <div className="absolute inset-0 z-0 bg-[#0a0a0a]">
+        {/* Lightweight first paint — visually replaced once the video is ready */}
+        <img
+          src={`${import.meta.env.BASE_URL}hero-poster.webp`}
+          alt=""
+          width="1920"
+          height="1080"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+          className="absolute inset-0 z-[1] h-full w-full object-cover transition-opacity duration-1200 ease-smooth"
+          style={{ opacity: videoReady ? 0 : 1 }}
+        />
+
         <video
+          ref={videoRef}
           autoPlay
           muted
           loop
           playsInline
+          preload="none"
+          poster={`${import.meta.env.BASE_URL}hero-poster.webp`}
           onCanPlay={() => setVideoReady(true)}
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1200 ease-smooth"
+          className="absolute inset-0 z-[2] w-full h-full object-cover transition-opacity duration-1200 ease-smooth"
           style={{ opacity: videoReady ? 1 : 0 }}
         >
-          <source src={`${import.meta.env.BASE_URL}hero-video.mp4`} type="video/mp4" />
+          <source
+            src={shouldLoadVideo ? `${import.meta.env.BASE_URL}hero-video.webm` : undefined}
+            type="video/webm"
+          />
+          <source
+            src={shouldLoadVideo ? `${import.meta.env.BASE_URL}hero-video.mp4` : undefined}
+            type="video/mp4"
+          />
         </video>
 
         {/* 黑色蒙版 — 压暗视频 */}
         <div
-          className="absolute inset-0 bg-black/45 transition-opacity duration-1200 ease-smooth"
-          style={{ opacity: videoReady ? 1 : 0 }}
+          className="absolute inset-0 z-[3] bg-black/45"
         />
 
         {/* 文字可读性渐变 — 底部渐变到背景色 */}
         <div
-          className="absolute inset-0 transition-opacity duration-1200 ease-smooth"
+          className="absolute inset-0 z-[3]"
           style={{
-            opacity: videoReady ? 1 : 0,
             background: `
               radial-gradient(ellipse at 50% 45%, rgba(255,255,255,0.10) 0%, transparent 55%),
               linear-gradient(to bottom,
@@ -53,12 +107,11 @@ export function Hero() {
         />
 
         {/* 底部丝滑过渡层 — 渐变到 #0a0a0a 实现与下一屏无缝衔接 */}
-        <div className="absolute bottom-0 left-0 right-0 h-[35vh] bg-gradient-to-b from-transparent via-[#0a0a0a]/60 to-[#0a0a0a] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 z-[3] h-[35vh] bg-gradient-to-b from-transparent via-[#0a0a0a]/60 to-[#0a0a0a] pointer-events-none" />
 
         {/* Fallback gradient while video loads */}
         <div
-          className="absolute inset-0 bg-gradient-to-br from-[#1a1a1a] via-[#0a0a0a] to-[#0a0a0a] transition-opacity duration-800 ease-smooth"
-          style={{ opacity: videoReady ? 0 : 1 }}
+          className="absolute inset-0 z-0 bg-gradient-to-br from-[#1a1a1a] via-[#0a0a0a] to-[#0a0a0a]"
         />
       </div>
 

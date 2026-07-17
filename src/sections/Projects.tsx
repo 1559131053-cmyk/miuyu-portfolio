@@ -1,442 +1,300 @@
-import { useRef, useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useScrollReveal } from '@/hooks/useScrollReveal'
 import BorderGlow from '@/components/BorderGlow'
 
 interface Project {
   title: string
-  title_cn: string
-  category: string
-  category_cn: string
+  titleCn: string
   year: string
   gradient: string
   pattern: string
-  video?: string
+  videoMp4: string
+  videoWebm?: string
+  poster: string
 }
 
 const ASSET_BASE = import.meta.env.BASE_URL
 
 const PROJECTS: Project[] = [
-  {
-    title: 'Guilloché Dial Striking Watch',
-    title_cn: '玑镂盘面自鸣手表',
-    category: 'Watch Product Video',
-    category_cn: '手表产品视频',
-    year: '2025',
-    gradient: 'linear-gradient(135deg, #0c0a08 0%, #181410 40%, #28201a 100%)',
-    pattern: 'radial-gradient(circle at 50% 45%, rgba(220,180,100,0.16), transparent 60%)',
-    video: `${ASSET_BASE}hero-video.mp4`,
-  },
-  {
-    title: 'Enamel Snake',
-    title_cn: '珐琅蛇',
-    category: 'Watch Product Video',
-    category_cn: '手表产品视频',
-    year: '2025',
-    gradient: 'linear-gradient(135deg, #100e0a 0%, #1e1a12 40%, #2e2820 100%)',
-    pattern: 'radial-gradient(circle at 60% 50%, rgba(220,180,100,0.14), transparent 60%)',
-    video: `${ASSET_BASE}watch-enamel-snake.mp4`,
-  },
-  {
-    title: 'Carbon Fiber Case',
-    title_cn: '碳纤维外壳',
-    category: 'Watch Detail Visualization',
-    category_cn: '手表详情可视化',
-    year: '2025',
-    gradient: 'linear-gradient(135deg, #0d0e10 0%, #181a20 40%, #262a34 100%)',
-    pattern: 'radial-gradient(circle at 45% 45%, rgba(180,170,200,0.13), transparent 60%)',
-    video: `${ASSET_BASE}watch-final-rev1.mp4`,
-  },
-  {
-    title: 'Transparent Crystal',
-    title_cn: '透明水晶',
-    category: 'Watch Detail Visualization',
-    category_cn: '手表详情可视化',
-    year: '2025',
-    gradient: 'linear-gradient(135deg, #100d0c 0%, #1e1816 40%, #2e2622 100%)',
-    pattern: 'radial-gradient(circle at 55% 40%, rgba(200,160,120,0.12), transparent 60%)',
-    video: `${ASSET_BASE}watch-final-rev2.mp4`,
-  },
-  {
-    title: 'Carbon Fiber Dial',
-    title_cn: '碳纤维盘面',
-    category: 'Watch Product Video',
-    category_cn: '手表产品视频',
-    year: '2025',
-    gradient: 'linear-gradient(135deg, #0a0d10 0%, #141c24 40%, #1e2c38 100%)',
-    pattern: 'radial-gradient(circle at 50% 50%, rgba(120,160,200,0.14), transparent 60%)',
-    video: `${ASSET_BASE}watch-4002.mp4`,
-  },
-  {
-    title: 'Skeletonized Dial',
-    title_cn: '镂空盘面',
-    category: 'Watch Product Video',
-    category_cn: '手表产品视频',
-    year: '2025',
-    gradient: 'linear-gradient(135deg, #0c0a10 0%, #1a1622 40%, #2a2236 100%)',
-    pattern: 'radial-gradient(circle at 40% 55%, rgba(140,120,180,0.13), transparent 60%)',
-    video: `${ASSET_BASE}watch-4003.mp4`,
-  },
-  {
-    title: 'Hammered Dial',
-    title_cn: '锤纹盘面',
-    category: 'Watch Detail Visualization',
-    category_cn: '手表详情可视化',
-    year: '2025',
-    gradient: 'linear-gradient(135deg, #0a0f12 0%, #12222a 40%, #1a3038 100%)',
-    pattern: 'radial-gradient(circle at 50% 40%, rgba(100,180,200,0.15), transparent 60%)',
-    video: `${ASSET_BASE}watch-bg8008.mp4`,
-  },
-  {
-    title: 'Skeletonized Steel Case',
-    title_cn: '镂空钢壳',
-    category: 'Watch Product Video',
-    category_cn: '手表产品视频',
-    year: '2025',
-    gradient: 'linear-gradient(135deg, #100c0e 0%, #1e1618 40%, #2e2226 100%)',
-    pattern: 'radial-gradient(circle at 65% 45%, rgba(200,140,120,0.13), transparent 60%)',
-    video: `${ASSET_BASE}watch-cinematic-score.mp4`,
-  },
-  {
-    title: 'Luminous Carbon Fiber',
-    title_cn: '夜光碳纤维',
-    category: 'Watch Detail Visualization',
-    category_cn: '手表详情可视化',
-    year: '2025',
-    gradient: 'linear-gradient(135deg, #0e0c10 0%, #1a1620 40%, #282234 100%)',
-    pattern: 'radial-gradient(circle at 35% 50%, rgba(160,130,180,0.12), transparent 60%)',
-    video: `${ASSET_BASE}watch-bg7006.mp4`,
-  },
-  {
-    title: 'Second-Generation Crystal',
-    title_cn: '二代水晶',
-    category: 'Watch Product Video',
-    category_cn: '手表产品视频',
-    year: '2026',
-    gradient: 'linear-gradient(135deg, #0e0c12 0%, #1c1828 40%, #2a2440 100%)',
-    pattern: 'radial-gradient(circle at 70% 30%, rgba(140,120,200,0.14), transparent 60%)',
-    video: `${ASSET_BASE}watch-bgm.mp4`,
-  },
-  {
-    title: 'Genghis Khan',
-    title_cn: '成吉思汗',
-    category: 'Watch Product Video',
-    category_cn: '手表产品视频',
-    year: '2026',
-    gradient: 'linear-gradient(135deg, #100a0e 0%, #1e141c 40%, #2e1e28 100%)',
-    pattern: 'radial-gradient(circle at 45% 55%, rgba(220,140,160,0.12), transparent 60%)',
-    video: `${ASSET_BASE}watch-genghis-khan.mp4`,
-  },
-  {
-    title: 'World Cup',
-    title_cn: '世界杯',
-    category: 'Watch Detail Visualization',
-    category_cn: '手表详情可视化',
-    year: '2026',
-    gradient: 'linear-gradient(135deg, #120e10 0%, #22181e 40%, #322028 100%)',
-    pattern: 'radial-gradient(circle at 30% 60%, rgba(200,120,140,0.12), transparent 60%)',
-    video: `${ASSET_BASE}watch-world-cup.mp4`,
-  },
-]
+  ['Guilloché Dial Striking Watch', '玑镂盘面自鸣手表', '2025', 'hero-video.mp4', 'gallery/031.webp', 'hero-video.webm'],
+  ['Enamel Snake', '珐琅蛇', '2025', 'watch-enamel-snake.mp4', 'gallery/065.webp'],
+  ['Carbon Fiber Case', '碳纤维外壳', '2025', 'watch-final-rev1.mp4', 'gallery/103.webp'],
+  ['Transparent Crystal', '透明水晶', '2025', 'watch-final-rev2.mp4', 'gallery/028.webp'],
+  ['Carbon Fiber Dial', '碳纤维盘面', '2025', 'watch-4002.mp4', 'gallery/082.webp'],
+  ['Skeletonized Dial', '镂空盘面', '2025', 'watch-4003.mp4', 'gallery/043.webp'],
+  ['Hammered Dial', '锤纹盘面', '2025', 'watch-bg8008.mp4', 'gallery/075.webp'],
+  ['Skeletonized Steel Case', '镂空钢壳', '2025', 'watch-cinematic-score.mp4', 'gallery/086.webp'],
+  ['Luminous Carbon Fiber', '夜光碳纤维', '2025', 'watch-bg7006.mp4', 'gallery/072.webp'],
+  ['Second-Generation Crystal', '二代水晶', '2026', 'watch-bgm.mp4', 'gallery/069.webp'],
+  ['Genghis Khan', '成吉思汗', '2026', 'watch-genghis-khan.mp4', 'gallery/042.webp'],
+  ['World Cup', '世界杯', '2026', 'watch-world-cup.mp4', 'gallery/001.webp'],
+].map(([title, titleCn, year, videoMp4, poster, videoWebm], index) => ({
+  title,
+  titleCn,
+  year,
+  videoMp4: `${ASSET_BASE}${videoMp4}`,
+  videoWebm: videoWebm ? `${ASSET_BASE}${videoWebm}` : undefined,
+  poster: `${ASSET_BASE}${poster}`,
+  gradient: `linear-gradient(135deg, #090909 0%, #151515 55%, ${index % 2 ? '#201817' : '#172027'} 100%)`,
+  pattern: 'radial-gradient(circle at 50% 42%, rgba(220,38,38,0.09), transparent 62%)',
+}))
 
-function ProjectPreview({ src }: { src: string }) {
+function ArrowIcon({ direction }: { direction: 'left' | 'right' }) {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d={direction === 'left' ? 'M15 5L8 12L15 19' : 'M9 5L16 12L9 19'}
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function ProjectPreview({ project, active }: { project: Project; active: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [shouldLoad, setShouldLoad] = useState(false)
+  const [isNearViewport, setIsNearViewport] = useState(false)
+  const shouldLoad = active && isNearViewport
 
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
-
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setShouldLoad(true)
-          requestAnimationFrame(() => video.play().catch(() => undefined))
-        } else {
-          video.pause()
-        }
-      },
-      { threshold: 0.05, rootMargin: '160px' }
+      ([entry]) => setIsNearViewport(entry.isIntersecting),
+      { threshold: 0.05, rootMargin: '120px' },
     )
-
     observer.observe(video)
     return () => observer.disconnect()
   }, [])
 
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    video.pause()
+    video.load()
+    if (shouldLoad) requestAnimationFrame(() => video.play().catch(() => undefined))
+  }, [shouldLoad])
+
   return (
     <video
       ref={videoRef}
-      className="absolute inset-0 w-full h-full object-cover"
-      src={shouldLoad ? src : undefined}
+      className="absolute inset-0 h-full w-full object-cover"
+      poster={project.poster}
       muted
       loop
       playsInline
       preload="none"
-    />
+    >
+      {project.videoWebm && <source src={shouldLoad ? project.videoWebm : undefined} type="video/webm" />}
+      <source src={shouldLoad ? project.videoMp4 : undefined} type="video/mp4" />
+    </video>
   )
 }
 
 export function Projects() {
   const { ref: revealRef, isVisible } = useScrollReveal<HTMLElement>()
-  const trackRef = useRef<HTMLDivElement>(null)
   const viewportRef = useRef<HTMLDivElement>(null)
+  const pointerStart = useRef<{ x: number; y: number } | null>(null)
+  const didSwipe = useRef(false)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [itemsPerPage, setItemsPerPage] = useState(() => (typeof window !== 'undefined' && window.innerWidth >= 1024 ? 3 : 1))
+  const [currentPage, setCurrentPage] = useState(0)
+  const pageCount = Math.ceil(PROJECTS.length / itemsPerPage)
 
-  // Horizontal scroll position driven by downward wheel input
-  const currentXRef = useRef(0)
-  const targetXRef = useRef(0)
+  const pages = useMemo(
+    () => Array.from({ length: pageCount }, (_, page) => PROJECTS.slice(page * itemsPerPage, (page + 1) * itemsPerPage)),
+    [itemsPerPage, pageCount],
+  )
 
-  // Lock body scroll when modal is open
+  const goToPage = (page: number) => setCurrentPage(Math.max(0, Math.min(pageCount - 1, page)))
+  const goPrevious = () => setCurrentPage((page) => Math.max(0, page - 1))
+  const goNext = () => setCurrentPage((page) => Math.min(pageCount - 1, page + 1))
+
   useEffect(() => {
-    if (selectedProject) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
+    const media = window.matchMedia('(min-width: 1024px)')
+    const updateLayout = () => {
+      setItemsPerPage(media.matches ? 3 : 1)
+      setCurrentPage(0)
     }
+    updateLayout()
+    media.addEventListener('change', updateLayout)
+    return () => media.removeEventListener('change', updateLayout)
+  }, [])
+
+  useEffect(() => {
+    document.body.style.overflow = selectedProject ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [selectedProject])
 
-  // Downward wheel input explores the horizontal track before the page continues.
-  // Upward wheel input is never intercepted, so the visitor can leave immediately.
-  useEffect(() => {
-    const track = trackRef.current
-    const viewport = viewportRef.current
-    if (!track || !viewport) return
-
-    let rafId: number | null = null
-    const lerp = (a: number, b: number, n: number) => a + (b - a) * n
-
-    const getMaxTranslate = () => Math.max(0, track.scrollWidth - viewport.offsetWidth)
-
-    const handleWheel = (event: WheelEvent) => {
-      if (event.deltaY <= 0 || document.body.style.overflow === 'hidden') return
-
-      const rect = viewport.getBoundingClientRect()
-      const activationLine = window.innerHeight * 0.55
-      const isActive = rect.top <= activationLine && rect.bottom >= activationLine
-      if (!isActive) return
-
-      const maxTranslate = getMaxTranslate()
-      if (maxTranslate === 0 || targetXRef.current <= -maxTranslate + 1) return
-
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'ArrowLeft') {
       event.preventDefault()
-      const deltaMultiplier = event.deltaMode === 1
-        ? 16
-        : event.deltaMode === 2
-          ? window.innerHeight
-          : 1
-      const wheelDistance = event.deltaY * deltaMultiplier * 1.15
-      targetXRef.current = Math.max(-maxTranslate, targetXRef.current - wheelDistance)
+      goPrevious()
     }
-
-    const handleResize = () => {
-      const maxTranslate = getMaxTranslate()
-      targetXRef.current = Math.max(-maxTranslate, Math.min(0, targetXRef.current))
-      currentXRef.current = Math.max(-maxTranslate, Math.min(0, currentXRef.current))
+    if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      goNext()
     }
+  }
 
-    const resetWhenReturningAbove = () => {
-      if (viewport.getBoundingClientRect().top >= window.innerHeight) {
-        targetXRef.current = 0
-        currentXRef.current = 0
-        track.style.transform = 'translate3d(0, 0, 0)'
-      }
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse') return
+    pointerStart.current = { x: event.clientX, y: event.clientY }
+    didSwipe.current = false
+  }
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!pointerStart.current || event.pointerType === 'mouse') return
+    const dx = event.clientX - pointerStart.current.x
+    const dy = event.clientY - pointerStart.current.y
+    pointerStart.current = null
+    if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      didSwipe.current = true
+      if (dx > 0) goPrevious()
+      else goNext()
     }
+  }
 
-    const animate = () => {
-      currentXRef.current = lerp(currentXRef.current, targetXRef.current, 0.1)
-      if (Math.abs(targetXRef.current - currentXRef.current) < 0.05) {
-        currentXRef.current = targetXRef.current
-      }
-
-      track.style.transform = `translate3d(${currentXRef.current}px, 0, 0)`
-      rafId = requestAnimationFrame(animate)
+  const openProject = (project: Project) => {
+    if (didSwipe.current) {
+      didSwipe.current = false
+      return
     }
+    setSelectedProject(project)
+  }
 
-    window.addEventListener('wheel', handleWheel, { passive: false })
-    window.addEventListener('resize', handleResize)
-    window.addEventListener('scroll', resetWhenReturningAbove, { passive: true })
-    rafId = requestAnimationFrame(animate)
-    return () => {
-      window.removeEventListener('wheel', handleWheel)
-      window.removeEventListener('resize', handleResize)
-      window.removeEventListener('scroll', resetWhenReturningAbove)
-      if (rafId !== null) cancelAnimationFrame(rafId)
-    }
-  }, [])
+  const navigationButtonClass = 'projects-carousel__arrow inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white shadow-[0_10px_35px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-300 hover:border-[#dc2626]/70 hover:bg-[#dc2626]/15 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:ring-offset-4 focus-visible:ring-offset-[#0a0a0a] disabled:pointer-events-none disabled:opacity-25'
 
   return (
     <section id="work" ref={revealRef} className="relative pt-24 lg:pt-32 pb-0">
-      {/* Section Header */}
       <div className="mx-auto max-w-portfolio px-8 lg:px-12 mb-10 lg:mb-14">
         <div className={`reveal ${isVisible ? 'reveal--visible' : ''}`}>
           <span className="section-label">Selected Work · 精选作品</span>
         </div>
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mt-6">
+        <div className="mt-6 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className={`reveal ${isVisible ? 'reveal--visible' : ''}`} data-delay="1">
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight text-foreground">
-              3D Watch Projects
-            </h2>
-            <p className="mt-2 font-display text-lg text-muted-foreground/60">
-              三维手表项目
-            </p>
+            <h2 className="font-display text-4xl font-semibold leading-tight text-foreground md:text-5xl lg:text-6xl">3D Watch Projects</h2>
+            <p className="mt-2 font-display text-lg text-muted-foreground/60">三维手表项目</p>
           </div>
           <div className={`reveal ${isVisible ? 'reveal--visible' : ''}`} data-delay="2">
-            <p className="text-muted-foreground max-w-sm leading-relaxed font-light">
-              A curated selection of 3D watch detail visualizations and product videos,
-              crafted with precision and cinematic realism.
-            </p>
-            <p className="text-muted-foreground/50 max-w-sm leading-relaxed font-light text-sm mt-2">
-              精选手表三维详情可视化与产品视频作品，以精准工艺与电影级质感呈现。
-            </p>
+            <p className="max-w-sm font-light leading-relaxed text-muted-foreground">A curated selection of 3D watch detail visualizations and product videos, crafted with precision and cinematic realism.</p>
+            <p className="mt-2 max-w-sm text-sm font-light leading-relaxed text-muted-foreground/50">精选手表三维详情可视化与产品视频作品，以精准工艺与电影级质感呈现。</p>
           </div>
         </div>
       </div>
 
-      {/* Project Viewport — scroll down to move horizontally */}
-      <div
-        ref={viewportRef}
-        className="relative overflow-hidden h-[400px] md:h-[460px] lg:h-[520px]"
-      >
-        {/* Horizontal Track */}
-        <div ref={trackRef} className="projects-track flex gap-6 lg:gap-8 pl-8 lg:pl-12 h-full will-change-transform">
-          {PROJECTS.map((project) => (
-            <div
-              key={project.title}
-              className="projects-track__item group cursor-pointer flex-shrink-0 w-[420px] md:w-[500px] lg:w-[620px]"
-              onClick={() => project.video && setSelectedProject(project)}
-            >
-              <BorderGlow
-                glowColor="0 84% 60%"
-                backgroundColor="#0a0a0a"
-                borderRadius={16}
-                glowRadius={30}
-                glowIntensity={1.2}
-                coneSpread={25}
-                colors={['#dc2626', '#ef4444', '#7f1d1d']}
-                className="h-full"
-              >
-                <div className="relative w-full h-full overflow-hidden" style={{ background: project.gradient }}>
-                  {/* Video background */}
-                  {project.video && (
-                    <ProjectPreview src={project.video} />
-                  )}
+      <div className="projects-carousel mx-auto max-w-portfolio px-8 lg:px-12">
+        <div className="relative lg:px-16">
+          <button className={`${navigationButtonClass} absolute left-0 top-1/2 z-20 hidden -translate-y-1/2 lg:inline-flex`} onClick={goPrevious} disabled={currentPage === 0} aria-label="上一个视频作品">
+            <ArrowIcon direction="left" />
+          </button>
 
-                  {/* Pattern overlay */}
-                  <div
-                    className="absolute inset-0"
-                    style={{ background: project.pattern }}
-                  />
-
-                  {/* Gradient overlay for text */}
-                  <div className="project-card__overlay" />
-
-                  {/* Bilingual title — consistently anchored at bottom left */}
-                  <div className="absolute bottom-0 left-0 right-0 p-7 lg:p-8">
-                    <h3 className="max-w-[85%] font-display text-2xl lg:text-3xl font-semibold leading-tight text-white">
-                      {project.title}
-                    </h3>
-                    <p className="mt-2 font-display text-sm lg:text-base font-medium tracking-[0.08em] text-white/65">
-                      {project.title_cn}
-                    </p>
-                  </div>
+          <div
+            ref={viewportRef}
+            className="projects-carousel__viewport overflow-hidden rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#dc2626]/80"
+            tabIndex={0}
+            role="region"
+            aria-roledescription="轮播"
+            aria-label="视频作品轮播"
+            onKeyDown={handleKeyDown}
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={() => { pointerStart.current = null }}
+          >
+            <div className="projects-carousel__track flex" style={{ transform: `translate3d(-${currentPage * 100}%, 0, 0)` }}>
+              {pages.map((projects, pageIndex) => (
+                <div key={pageIndex} className="grid min-w-full grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6" aria-hidden={pageIndex !== currentPage}>
+                  {projects.map((project) => (
+                    <div
+                      key={project.title}
+                      className="projects-carousel__card group h-[460px] cursor-pointer overflow-hidden rounded-2xl lg:h-[500px]"
+                      onClick={() => openProject(project)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          openProject(project)
+                        }
+                      }}
+                      role="button"
+                      tabIndex={pageIndex === currentPage ? 0 : -1}
+                      aria-label={`播放 ${project.titleCn}`}
+                    >
+                      <BorderGlow glowColor="0 84% 60%" backgroundColor="#0a0a0a" borderRadius={16} glowRadius={30} glowIntensity={1.2} coneSpread={25} colors={['#dc2626', '#ef4444', '#7f1d1d']} className="h-full">
+                        <div className="relative h-full w-full overflow-hidden" style={{ background: project.gradient }}>
+                          <ProjectPreview project={project} active={pageIndex === currentPage} />
+                          <div className="absolute inset-0" style={{ background: project.pattern }} />
+                          <div className="project-card__overlay" />
+                          <div className="absolute bottom-0 left-0 right-0 p-7 lg:p-8">
+                            <h3 className="max-w-[90%] font-display text-2xl font-semibold leading-tight text-white">{project.title}</h3>
+                            <p className="mt-2 font-display text-sm font-medium tracking-[0.08em] text-white/65">{project.titleCn}</p>
+                          </div>
+                        </div>
+                      </BorderGlow>
+                    </div>
+                  ))}
                 </div>
-              </BorderGlow>
+              ))}
             </div>
-          ))}
+          </div>
 
-          {/* End spacer */}
-          <div className="flex-shrink-0 w-8 lg:w-12" />
+          <button className={`${navigationButtonClass} absolute right-0 top-1/2 z-20 hidden -translate-y-1/2 lg:inline-flex`} onClick={goNext} disabled={currentPage === pageCount - 1} aria-label="下一个视频作品">
+            <ArrowIcon direction="right" />
+          </button>
         </div>
 
-        {/* Edge fade gradients */}
-        <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#0a0a0a] to-transparent pointer-events-none z-10" />
-        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#0a0a0a] to-transparent pointer-events-none z-10" />
+        <div className="mt-7 flex items-center justify-center gap-5 lg:hidden">
+          <button className={navigationButtonClass} onClick={goPrevious} disabled={currentPage === 0} aria-label="上一个视频作品"><ArrowIcon direction="left" /></button>
+          <span className="min-w-14 text-center font-display text-xs tracking-[0.18em] text-white/45" aria-live="polite">{String(currentPage + 1).padStart(2, '0')} / {String(pageCount).padStart(2, '0')}</span>
+          <button className={navigationButtonClass} onClick={goNext} disabled={currentPage === pageCount - 1} aria-label="下一个视频作品"><ArrowIcon direction="right" /></button>
+        </div>
+
+        <div className="mt-6 flex items-center justify-center gap-2.5" aria-label="视频作品分页">
+          {Array.from({ length: pageCount }, (_, page) => (
+            <button
+              key={page}
+              type="button"
+              className={`projects-carousel__dot h-3 min-w-3 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:ring-offset-4 focus-visible:ring-offset-[#0a0a0a] ${page === currentPage ? 'projects-carousel__dot--active' : ''}`}
+              onClick={() => goToPage(page)}
+              aria-label={`跳转到第 ${page + 1} 页视频作品`}
+              aria-current={page === currentPage ? 'true' : undefined}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Hint */}
-      <div className="mt-6 flex items-center justify-center gap-3 text-muted-foreground/40 text-xs font-display tracking-[0.15em] uppercase">
-        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-          <path d="M3 8H13M13 8L8 3M13 8L8 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <span>Scroll down to explore · 下滑横向浏览</span>
-      </div>
-
-      {/* View All Link */}
-      <div className="mx-auto max-w-portfolio px-8 lg:px-12 pt-8">
+      <div className="mx-auto max-w-portfolio px-8 pt-8 lg:px-12">
         <div className={`flex justify-center reveal ${isVisible ? 'reveal--visible' : ''}`} data-delay="3">
-          <BorderGlow
-            flat
-            glowColor="0 84% 60%"
-            backgroundColor="transparent"
-            borderRadius={12}
-            glowRadius={14}
-            glowIntensity={0.9}
-            edgeSensitivity={20}
-            colors={['#dc2626', '#ef4444', '#7f1d1d']}
-          >
-            <button className="group inline-flex items-center gap-3 text-sm font-medium text-muted-foreground hover:text-[#dc2626] transition-colors duration-500 ease-smooth px-4 py-2">
-              <span className="border-b border-white/10 group-hover:border-[#dc2626]/50 pb-1 transition-colors duration-500 ease-smooth">
-                View All Projects · 查看全部项目
-              </span>
-              <svg className="w-4 h-4 transition-transform duration-500 ease-smooth group-hover:translate-x-1" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8H13M13 8L8 3M13 8L8 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+          <BorderGlow flat glowColor="0 84% 60%" backgroundColor="transparent" borderRadius={12} glowRadius={14} glowIntensity={0.9} edgeSensitivity={20} colors={['#dc2626', '#ef4444', '#7f1d1d']}>
+            <button className="group inline-flex items-center gap-3 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors duration-500 hover:text-[#dc2626]">
+              <span className="border-b border-white/10 pb-1 transition-colors duration-500 group-hover:border-[#dc2626]/50">View All Projects · 查看全部项目</span>
+              <ArrowIcon direction="right" />
             </button>
           </BorderGlow>
         </div>
       </div>
 
-      {/* === Video Modal — rendered via portal to escape any ancestor overflow/transform === */}
       {selectedProject && createPortal(
-        <div
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-2xl"
-          onClick={() => setSelectedProject(null)}
-        >
-          {/* Close button */}
-          <button
-            className="absolute top-6 right-6 z-10 w-12 h-12 flex items-center justify-center rounded-full border border-white/20 bg-white/[0.06] backdrop-blur-xl text-white/70 hover:text-white hover:border-[#dc2626]/50 hover:bg-[#dc2626]/10 transition-all duration-500 ease-smooth"
-            onClick={() => setSelectedProject(null)}
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
-              <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-2xl" onClick={() => setSelectedProject(null)}>
+          <button className="absolute right-6 top-6 z-10 flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-white/[0.06] text-white/70 backdrop-blur-xl transition-all duration-300 hover:border-[#dc2626]/50 hover:bg-[#dc2626]/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#dc2626]" onClick={() => setSelectedProject(null)} aria-label="关闭视频">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
           </button>
-
-          {/* Video player */}
-          <div
-            className="relative w-[92vw] max-w-[1400px]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Title bar */}
+          <div className="relative w-[92vw] max-w-[1400px]" onClick={(event) => event.stopPropagation()}>
             <div className="mb-4 flex items-end justify-between">
-              <div>
-                <h3 className="font-display text-2xl lg:text-3xl font-semibold text-foreground">
-                  {selectedProject.title}
-                </h3>
-                <p className="mt-1 font-display text-sm text-white/55">
-                  {selectedProject.title_cn}
-                </p>
-              </div>
-              <span className="px-3 py-1 bg-white/[0.06] rounded-full text-xs font-display text-white/50 border border-white/10">
-                {selectedProject.year}
-              </span>
+              <div><h3 className="font-display text-2xl font-semibold text-foreground lg:text-3xl">{selectedProject.title}</h3><p className="mt-1 font-display text-sm text-white/55">{selectedProject.titleCn}</p></div>
+              <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 font-display text-xs text-white/50">{selectedProject.year}</span>
             </div>
-
-            {/* Video — original aspect ratio, no cropping */}
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_80px_rgba(220,38,38,0.15)] bg-black">
-              <video
-                className="w-full h-auto max-h-[80vh] object-contain"
-                src={selectedProject.video}
-                autoPlay
-                controls
-                loop
-                playsInline
-              />
+            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_0_80px_rgba(220,38,38,0.15)]">
+              <video className="max-h-[80vh] h-auto w-full object-contain" poster={selectedProject.poster} autoPlay controls loop playsInline preload="metadata">
+                {selectedProject.videoWebm && <source src={selectedProject.videoWebm} type="video/webm" />}
+                <source src={selectedProject.videoMp4} type="video/mp4" />
+              </video>
             </div>
           </div>
         </div>,
-        document.body
+        document.body,
       )}
     </section>
   )

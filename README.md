@@ -34,10 +34,13 @@ pnpm preview
 ```
 portfolio/
 ├── public/                     # 静态资源
-│   ├── hero-video.mp4          # 首屏全屏背景视频（Cloudflare 优化版，约 16MB）
-│   ├── about-portrait.png      # About 板块人物照片
+│   ├── hero-video.webm         # 首屏 VP9 主视频（约 8.3MB）
+│   ├── hero-video.mp4          # 首屏 MP4 兼容备用（约 16MB）
+│   ├── hero-poster.webp        # 首屏即时显示封面（约 0.3MB）
+│   ├── about-portrait*.webp    # About 响应式人物照片（640/1024/1445）
 │   ├── watch-*.mp4             # 12 个项目展示视频
-│   └── gallery/                # Gallery 精选图片（14 张 JPG）
+│   └── gallery/                # Gallery 精选 WebP（640/790 两档）
+├── source-assets/images/       # JPG/PNG 原图，仅作源文件，不参与部署
 ├── src/
 │   ├── main.tsx                # 应用入口
 │   ├── App.tsx                 # 根组件，组装所有板块
@@ -82,7 +85,7 @@ portfolio/
 - 下方统计数字 (50+ 项目 / 3Y+ 经验)
 
 ### 2. About (关于)
-- 人物照片 (`about-portrait.png`)，底部渐变蒙版
+- 响应式 WebP 人物照片，底部渐变蒙版
 - 个人简介、技能统计
 - 邮箱：miuyu@qq.com
 
@@ -131,7 +134,8 @@ transitionDuration: {
 
 ## 注意事项
 
-- `public/` 中保留 12 个实际使用的视频和 14 张精选图片，构建产物约 218MB，单文件均低于 25MB
+- Hero 优先加载 VP9 WebM，MP4 仅用于兼容备用；poster 首屏优先显示，视频延迟挂载
+- `public/` 中保留 12 个实际使用的视频和 14 张精选图片，构建产物约 227MB，单文件均低于 25MB
 - 原始首屏视频、未使用视频和画廊原图保存在项目旁的素材备份目录，不参与构建
 - 未使用的旧组件、历史数据和依赖已从上线项目中移出，并保存在素材备份目录
 - 具体部署方式见 `DEPLOY.md`
