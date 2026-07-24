@@ -267,12 +267,9 @@ export function Projects() {
 
       <div className="mx-auto max-w-portfolio px-8 pt-8 lg:px-12">
         <div className={`flex justify-center reveal ${isVisible ? 'reveal--visible' : ''}`} data-delay="3">
-          <BorderGlow flat glowColor="0 84% 60%" backgroundColor="transparent" borderRadius={12} glowRadius={14} glowIntensity={0.9} edgeSensitivity={20} colors={['#dc2626', '#ef4444', '#7f1d1d']}>
-            <button className="group inline-flex items-center gap-3 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors duration-500 hover:text-[#dc2626]">
-              <span className="border-b border-white/10 pb-1 transition-colors duration-500 group-hover:border-[#dc2626]/50">View All Projects · 查看全部项目</span>
-              <ArrowIcon direction="right" />
-            </button>
-          </BorderGlow>
+          <p className="font-display text-xs font-medium tracking-[0.32em] text-white/35">
+            LESS IS MORE
+          </p>
         </div>
       </div>
 
