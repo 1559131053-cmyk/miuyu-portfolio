@@ -59,8 +59,9 @@ export function Contact() {
                 alt="微信二维码"
                 width="344"
                 height="344"
-                loading="lazy"
+                loading="eager"
                 decoding="async"
+                fetchPriority="low"
                 className="block shrink-0"
                 style={{ width: 128, height: 128 }}
               />
