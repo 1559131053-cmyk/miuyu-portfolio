@@ -36,9 +36,55 @@ export function Hero() {
     const video = videoRef.current
     if (!video || !shouldLoadVideo) return
 
-    video.load()
-    if (!document.hidden && video.paused) {
-      video.play().catch(() => undefined)
+    let stabilityTimer: ReturnType<typeof setTimeout> | undefined
+    let fallbackRevealTimer: ReturnType<typeof setTimeout> | undefined
+    let frameCallbackId: number | undefined
+    let playbackPrepared = false
+
+    const clearStabilityTimer = () => {
+      if (!stabilityTimer) return
+      clearTimeout(stabilityTimer)
+      stabilityTimer = undefined
+    }
+
+    const revealFromBeginning = () => {
+      if (playbackPrepared) return
+      playbackPrepared = true
+      clearStabilityTimer()
+      video.currentTime = 0
+
+      const revealVideo = () => setVideoReady(true)
+      if ('requestVideoFrameCallback' in video) {
+        frameCallbackId = video.requestVideoFrameCallback(revealVideo)
+      } else {
+        fallbackRevealTimer = setTimeout(revealVideo, 100)
+      }
+    }
+
+    const handlePlaying = () => {
+      if (playbackPrepared || stabilityTimer) return
+      stabilityTimer = setTimeout(revealFromBeginning, 1750)
+    }
+
+    const handlePlaybackInterruption = () => {
+      if (!playbackPrepared) clearStabilityTimer()
+    }
+
+    video.addEventListener('playing', handlePlaying)
+    video.addEventListener('waiting', handlePlaybackInterruption)
+    video.addEventListener('stalled', handlePlaybackInterruption)
+    video.addEventListener('pause', handlePlaybackInterruption)
+
+    return () => {
+      clearStabilityTimer()
+      if (fallbackRevealTimer) clearTimeout(fallbackRevealTimer)
+      if (frameCallbackId !== undefined && 'cancelVideoFrameCallback' in video) {
+        video.cancelVideoFrameCallback(frameCallbackId)
+      }
+      video.removeEventListener('playing', handlePlaying)
+      video.removeEventListener('waiting', handlePlaybackInterruption)
+      video.removeEventListener('stalled', handlePlaybackInterruption)
+      video.removeEventListener('pause', handlePlaybackInterruption)
     }
   }, [shouldLoadVideo])
 
@@ -97,18 +143,21 @@ export function Hero() {
           playsInline
           preload="none"
           poster={`${import.meta.env.BASE_URL}hero-poster.webp`}
-          onCanPlay={() => setVideoReady(true)}
           className="absolute inset-0 z-[2] w-full h-full object-cover transition-opacity duration-1200 ease-smooth"
           style={{ opacity: videoReady ? 1 : 0 }}
         >
-          <source
-            src={shouldLoadVideo ? `${import.meta.env.BASE_URL}hero-video.webm` : undefined}
-            type="video/webm"
-          />
-          <source
-            src={shouldLoadVideo ? `${import.meta.env.BASE_URL}hero-video.mp4` : undefined}
-            type="video/mp4"
-          />
+          {shouldLoadVideo ? (
+            <>
+              <source
+                src={`${import.meta.env.BASE_URL}hero-video.webm`}
+                type="video/webm"
+              />
+              <source
+                src={`${import.meta.env.BASE_URL}hero-video.mp4`}
+                type="video/mp4"
+              />
+            </>
+          ) : null}
         </video>
 
         {/* 黑色蒙版 — 压暗视频 */}
