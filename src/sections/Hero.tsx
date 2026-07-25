@@ -14,21 +14,51 @@ export function Hero() {
     if (!video) return
 
     let loadTimer: ReturnType<typeof setTimeout> | undefined
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return
+    let idleCallbackId: number | undefined
+    let idleFallbackTimer: ReturnType<typeof setTimeout> | undefined
+    let observer: IntersectionObserver | undefined
+    let loadStarted = false
 
-        observer.disconnect()
-        // Give the poster and critical UI a frame to paint before requesting video.
-        loadTimer = setTimeout(() => setShouldLoadVideo(true), 350)
-      },
-      { threshold: 0.01 }
-    )
+    const startVideoLoad = () => {
+      if (loadStarted) return
+      loadStarted = true
+      setShouldLoadVideo(true)
+    }
 
-    observer.observe(video)
+    const scheduleIdleLoad = () => {
+      if ('requestIdleCallback' in window) {
+        idleCallbackId = window.requestIdleCallback(startVideoLoad, { timeout: 1200 })
+      } else {
+        idleFallbackTimer = setTimeout(startVideoLoad, 300)
+      }
+    }
+
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry.isIntersecting) return
+          observer?.disconnect()
+          // Give the poster and critical UI a frame to paint before requesting video.
+          loadTimer = setTimeout(startVideoLoad, 350)
+        },
+        { threshold: 0.01 }
+      )
+      observer.observe(video)
+    }
+
+    if (document.readyState === 'complete') scheduleIdleLoad()
+    else window.addEventListener('load', scheduleIdleLoad, { once: true })
+
+    const compatibilityFallback = setTimeout(startVideoLoad, 2500)
     return () => {
-      observer.disconnect()
+      observer?.disconnect()
+      window.removeEventListener('load', scheduleIdleLoad)
       if (loadTimer) clearTimeout(loadTimer)
+      if (idleCallbackId !== undefined && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleCallbackId)
+      }
+      if (idleFallbackTimer) clearTimeout(idleFallbackTimer)
+      clearTimeout(compatibilityFallback)
     }
   }, [])
 
@@ -39,6 +69,7 @@ export function Hero() {
     let stabilityTimer: ReturnType<typeof setTimeout> | undefined
     let fallbackRevealTimer: ReturnType<typeof setTimeout> | undefined
     let frameCallbackId: number | undefined
+    let playbackRequestPending = false
     let playbackPrepared = false
 
     const clearStabilityTimer = () => {
@@ -70,14 +101,33 @@ export function Hero() {
       if (!playbackPrepared) clearStabilityTimer()
     }
 
+    const requestPlayback = () => {
+      if (document.hidden || !video.paused || playbackRequestPending) return
+      video.defaultMuted = true
+      video.muted = true
+      video.playsInline = true
+      if (video.networkState === HTMLMediaElement.NETWORK_EMPTY) video.load()
+
+      playbackRequestPending = true
+      video.play()
+        .catch(() => undefined)
+        .finally(() => {
+          playbackRequestPending = false
+        })
+    }
+
     video.addEventListener('playing', handlePlaying)
     video.addEventListener('waiting', handlePlaybackInterruption)
     video.addEventListener('stalled', handlePlaybackInterruption)
     video.addEventListener('pause', handlePlaybackInterruption)
+    video.addEventListener('loadeddata', requestPlayback)
+    video.addEventListener('canplay', requestPlayback)
+    const playbackFrameId = requestAnimationFrame(requestPlayback)
 
     return () => {
       clearStabilityTimer()
       if (fallbackRevealTimer) clearTimeout(fallbackRevealTimer)
+      cancelAnimationFrame(playbackFrameId)
       if (frameCallbackId !== undefined && 'cancelVideoFrameCallback' in video) {
         video.cancelVideoFrameCallback(frameCallbackId)
       }
@@ -85,6 +135,8 @@ export function Hero() {
       video.removeEventListener('waiting', handlePlaybackInterruption)
       video.removeEventListener('stalled', handlePlaybackInterruption)
       video.removeEventListener('pause', handlePlaybackInterruption)
+      video.removeEventListener('loadeddata', requestPlayback)
+      video.removeEventListener('canplay', requestPlayback)
     }
   }, [shouldLoadVideo])
 

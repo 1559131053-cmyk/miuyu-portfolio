@@ -34,27 +34,64 @@ function App() {
   const sectionNodes = useRef(new Map<string, HTMLDivElement>())
 
   useEffect(() => {
-    const observer = new IntersectionObserver(entries => {
-      const visibleIds = entries
-        .filter(entry => entry.isIntersecting)
-        .map(entry => (entry.target as HTMLElement).dataset.sectionId)
-        .filter((id): id is string => Boolean(id))
-
-      if (visibleIds.length === 0) return
-
+    let fallbackFrame: number | undefined
+    let observer: IntersectionObserver | undefined
+    const loadSections = (ids: string[]) => {
+      if (ids.length === 0) return
       setLoadedSections(previous => {
         const next = new Set(previous)
-        visibleIds.forEach(id => next.add(id))
+        ids.forEach(id => next.add(id))
         return next
       })
+    }
 
-      entries.forEach(entry => {
-        if (entry.isIntersecting) observer.unobserve(entry.target)
-      })
-    }, { rootMargin: '600px 0px' })
+    const checkNearbySections = () => {
+      fallbackFrame = undefined
+      const nearbyIds = [...sectionNodes.current.entries()]
+        .filter(([, node]) => {
+          const rect = node.getBoundingClientRect()
+          return rect.top <= window.innerHeight + 600 && rect.bottom >= -600
+        })
+        .map(([id]) => id)
+      loadSections(nearbyIds)
+    }
 
-    sectionNodes.current.forEach(node => observer.observe(node))
-    return () => observer.disconnect()
+    const scheduleFallbackCheck = () => {
+      if (fallbackFrame !== undefined) return
+      fallbackFrame = requestAnimationFrame(checkNearbySections)
+    }
+
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver(entries => {
+        const visibleIds = entries
+          .filter(entry => entry.isIntersecting)
+          .map(entry => (entry.target as HTMLElement).dataset.sectionId)
+          .filter((id): id is string => Boolean(id))
+
+        loadSections(visibleIds)
+        entries.forEach(entry => {
+          if (entry.isIntersecting) observer?.unobserve(entry.target)
+        })
+      }, { rootMargin: '600px 0px' })
+
+      sectionNodes.current.forEach(node => observer?.observe(node))
+    }
+
+    window.addEventListener('scroll', scheduleFallbackCheck, { passive: true })
+    window.addEventListener('resize', scheduleFallbackCheck)
+    scheduleFallbackCheck()
+    const compatibilityFallback = setTimeout(() => {
+      loadSections(['about'])
+      scheduleFallbackCheck()
+    }, 1500)
+
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener('scroll', scheduleFallbackCheck)
+      window.removeEventListener('resize', scheduleFallbackCheck)
+      clearTimeout(compatibilityFallback)
+      if (fallbackFrame !== undefined) cancelAnimationFrame(fallbackFrame)
+    }
   }, [])
 
   useEffect(() => {

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useScrollReveal } from '@/hooks/useScrollReveal'
 import BorderGlow from '@/components/BorderGlow'
 
@@ -8,6 +9,44 @@ const STATS = [
 
 export function About() {
   const { ref, isVisible } = useScrollReveal<HTMLDivElement>()
+  const [shouldLoadPortrait, setShouldLoadPortrait] = useState(false)
+
+  useEffect(() => {
+    let idleCallbackId: number | undefined
+    let preloadImage: HTMLImageElement | undefined
+    let preloadStarted = false
+
+    const preloadPortrait = () => {
+      if (preloadStarted) return
+      preloadStarted = true
+      const baseUrl = import.meta.env.BASE_URL
+      preloadImage = new Image()
+      preloadImage.srcset = `${baseUrl}about-portrait-640.webp 640w, ${baseUrl}about-portrait-1024.webp 1024w, ${baseUrl}about-portrait.webp 1445w`
+      preloadImage.sizes = '(max-width: 1023px) calc(100vw - 4rem), 34vw'
+      preloadImage.src = `${baseUrl}about-portrait.webp`
+      setShouldLoadPortrait(true)
+    }
+
+    const preloadTimer = setTimeout(() => {
+      if ('requestIdleCallback' in window) {
+        idleCallbackId = window.requestIdleCallback(preloadPortrait, { timeout: 800 })
+      } else {
+        preloadPortrait()
+      }
+    }, 1200)
+
+    const compatibilityFallback = setTimeout(preloadPortrait, 2500)
+    return () => {
+      clearTimeout(preloadTimer)
+      if (idleCallbackId !== undefined && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleCallbackId)
+      }
+      clearTimeout(compatibilityFallback)
+      preloadImage = undefined
+    }
+  }, [])
+
+  const portraitRequested = shouldLoadPortrait || isVisible
 
   return (
     <section ref={ref} className="relative py-24 lg:py-32 overflow-hidden">
@@ -21,8 +60,8 @@ export function About() {
             <div className="relative h-full">
               <div className="avatar-frame relative h-full min-h-[300px] rounded-2xl overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.06)]">
                 <img
-                  src={isVisible ? `${import.meta.env.BASE_URL}about-portrait.webp` : undefined}
-                  srcSet={isVisible ? `${import.meta.env.BASE_URL}about-portrait-640.webp 640w, ${import.meta.env.BASE_URL}about-portrait-1024.webp 1024w, ${import.meta.env.BASE_URL}about-portrait.webp 1445w` : undefined}
+                  src={portraitRequested ? `${import.meta.env.BASE_URL}about-portrait.webp` : undefined}
+                  srcSet={portraitRequested ? `${import.meta.env.BASE_URL}about-portrait-640.webp 640w, ${import.meta.env.BASE_URL}about-portrait-1024.webp 1024w, ${import.meta.env.BASE_URL}about-portrait.webp 1445w` : undefined}
                   sizes="(max-width: 1023px) calc(100vw - 4rem), 34vw"
                   alt="MIUYU portrait"
                   width="1445"
