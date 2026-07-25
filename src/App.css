@@ -1,5 +1,6 @@
 /* App-level styles — minimal, most styling handled by Tailwind + index.css */
 
-section[id] {
+section[id],
+[data-page-section] {
   scroll-margin-top: 6.5rem;
 }

@@ -33,7 +33,7 @@ export function Navbar() {
   }, [])
 
   const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+    window.dispatchEvent(new CustomEvent('portfolio:navigate', { detail: { id } }))
     setMobileOpen(false)
   }
 

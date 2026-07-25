@@ -591,7 +591,7 @@ export function Gallery() {
   )
 
   return (
-    <section id="gallery" ref={ref} className="relative py-24 lg:py-32 overflow-hidden">
+    <section ref={ref} className="relative py-24 lg:py-32 overflow-hidden">
       <div className="mx-auto max-w-portfolio px-8 lg:px-12">
         {/* Section Header */}
         <div className={`reveal ${isVisible ? 'reveal--visible' : ''}`}>

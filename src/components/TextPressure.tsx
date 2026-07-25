@@ -72,6 +72,7 @@ const TextPressure = ({
 
   const mouseRef = useRef<Point>({ x: 0, y: 0 })
   const cursorRef = useRef<Point>({ x: 0, y: 0 })
+  const animationStarterRef = useRef<() => void>(() => undefined)
 
   const [fontSize, setFontSize] = useState(minFontSize)
   const [scaleY, setScaleY] = useState(1)
@@ -83,12 +84,14 @@ const TextPressure = ({
     const handleMouseMove = (e: MouseEvent) => {
       cursorRef.current.x = e.clientX
       cursorRef.current.y = e.clientY
+      animationStarterRef.current()
     }
     const handleTouchMove = (e: TouchEvent) => {
       const t = e.touches[0]
       if (!t) return
       cursorRef.current.x = t.clientX
       cursorRef.current.y = t.clientY
+      animationStarterRef.current()
     }
 
     window.addEventListener('mousemove', handleMouseMove)
@@ -120,6 +123,7 @@ const TextPressure = ({
     setFontSize(newFontSize)
     setScaleY(1)
     setLineHeight(1)
+    animationStarterRef.current()
 
     requestAnimationFrame(() => {
       if (!titleRef.current) return
@@ -141,10 +145,14 @@ const TextPressure = ({
   }, [setSize])
 
   useEffect(() => {
-    let rafId: number
+    let rafId: number | null = null
+    let running = false
+
     const animate = () => {
-      mouseRef.current.x += (cursorRef.current.x - mouseRef.current.x) / 15
-      mouseRef.current.y += (cursorRef.current.y - mouseRef.current.y) / 15
+      const dx = cursorRef.current.x - mouseRef.current.x
+      const dy = cursorRef.current.y - mouseRef.current.y
+      mouseRef.current.x += dx / 15
+      mouseRef.current.y += dy / 15
 
       if (titleRef.current) {
         const titleRect = titleRef.current.getBoundingClientRect()
@@ -177,11 +185,27 @@ const TextPressure = ({
         })
       }
 
+      if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+        rafId = requestAnimationFrame(animate)
+      } else {
+        running = false
+        rafId = null
+      }
+    }
+
+    const startAnimation = () => {
+      if (running) return
+      running = true
       rafId = requestAnimationFrame(animate)
     }
 
-    animate()
-    return () => cancelAnimationFrame(rafId)
+    animationStarterRef.current = startAnimation
+    startAnimation()
+
+    return () => {
+      animationStarterRef.current = () => undefined
+      if (rafId !== null) cancelAnimationFrame(rafId)
+    }
   }, [width, weight, italic, alpha])
 
   const styleElement = useMemo(() => {

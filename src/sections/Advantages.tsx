@@ -50,7 +50,7 @@ export function Advantages() {
   const { ref, isVisible } = useScrollReveal<HTMLDivElement>()
 
   return (
-    <section id="expertise" ref={ref} className="relative py-24 lg:py-32 overflow-hidden">
+    <section ref={ref} className="relative py-24 lg:py-32 overflow-hidden">
       <div className="absolute top-1/2 left-0 w-96 h-96 bg-gold/[0.03] rounded-full blur-[120px] -translate-y-1/2" />
 
       <div className="mx-auto max-w-portfolio px-8 lg:px-12">

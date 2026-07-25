@@ -5,6 +5,7 @@ import TextPressure from '@/components/TextPressure'
 export function Hero() {
   const { ref, isVisible } = useScrollReveal<HTMLDivElement>({ threshold: 0.1 })
   const videoRef = useRef<HTMLVideoElement>(null)
+  const resumeAfterVisibilityRef = useRef(false)
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
   const [videoReady, setVideoReady] = useState(false)
 
@@ -36,7 +37,31 @@ export function Hero() {
     if (!video || !shouldLoadVideo) return
 
     video.load()
-    video.play().catch(() => undefined)
+    if (!document.hidden && video.paused) {
+      video.play().catch(() => undefined)
+    }
+  }, [shouldLoadVideo])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !shouldLoadVideo) return
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        resumeAfterVisibilityRef.current = true
+        if (!video.paused) video.pause()
+        return
+      }
+
+      if (resumeAfterVisibilityRef.current && video.paused) {
+        resumeAfterVisibilityRef.current = false
+        video.play().catch(() => undefined)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    handleVisibilityChange()
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [shouldLoadVideo])
 
   const scrollToSection = (id: string) => {

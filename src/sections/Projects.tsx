@@ -54,29 +54,38 @@ function ArrowIcon({ direction }: { direction: 'left' | 'right' }) {
   )
 }
 
-function ProjectPreview({ project, active }: { project: Project; active: boolean }) {
+function ProjectPreview({ project }: { project: Project }) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [isNearViewport, setIsNearViewport] = useState(false)
-  const shouldLoad = active && isNearViewport
 
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsNearViewport(entry.isIntersecting),
-      { threshold: 0.05, rootMargin: '120px' },
-    )
-    observer.observe(video)
-    return () => observer.disconnect()
-  }, [])
 
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-    video.pause()
+    let isInViewport = false
+    const syncPlayback = () => {
+      const shouldPlay = isInViewport && !document.hidden
+      if (shouldPlay && video.paused) {
+        video.play().catch(() => undefined)
+      } else if (!shouldPlay && !video.paused) {
+        video.pause()
+      }
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      isInViewport = entry.isIntersecting
+      syncPlayback()
+    }, { threshold: 0.01 })
+
     video.load()
-    if (shouldLoad) requestAnimationFrame(() => video.play().catch(() => undefined))
-  }, [shouldLoad])
+    observer.observe(video)
+    document.addEventListener('visibilitychange', syncPlayback)
+
+    return () => {
+      observer.disconnect()
+      document.removeEventListener('visibilitychange', syncPlayback)
+      video.pause()
+    }
+  }, [])
 
   return (
     <video
@@ -88,8 +97,8 @@ function ProjectPreview({ project, active }: { project: Project; active: boolean
       playsInline
       preload="none"
     >
-      {project.videoWebm && <source src={shouldLoad ? project.videoWebm : undefined} type="video/webm" />}
-      <source src={shouldLoad ? project.videoMp4 : undefined} type="video/mp4" />
+      {project.videoWebm && <source src={project.videoWebm} type="video/webm" />}
+      <source src={project.videoMp4} type="video/mp4" />
     </video>
   )
 }
@@ -99,9 +108,12 @@ export function Projects() {
   const viewportRef = useRef<HTMLDivElement>(null)
   const pointerStart = useRef<{ x: number; y: number } | null>(null)
   const didSwipe = useRef(false)
+  const videoCleanupTimer = useRef<number | null>(null)
+  const modalVideoRef = useRef<HTMLVideoElement>(null)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [itemsPerPage, setItemsPerPage] = useState(() => (typeof window !== 'undefined' && window.innerWidth >= 1024 ? 3 : 1))
   const [currentPage, setCurrentPage] = useState(0)
+  const [videoPages, setVideoPages] = useState<Set<number>>(() => new Set([0]))
   const pageCount = Math.ceil(PROJECTS.length / itemsPerPage)
 
   const pages = useMemo(
@@ -109,24 +121,60 @@ export function Projects() {
     [itemsPerPage, pageCount],
   )
 
-  const goToPage = (page: number) => setCurrentPage(Math.max(0, Math.min(pageCount - 1, page)))
-  const goPrevious = () => setCurrentPage((page) => Math.max(0, page - 1))
-  const goNext = () => setCurrentPage((page) => Math.min(pageCount - 1, page + 1))
+  const goToPage = (page: number) => {
+    const nextPage = Math.max(0, Math.min(pageCount - 1, page))
+    if (nextPage === currentPage) return
+
+    setVideoPages(new Set([currentPage, nextPage]))
+    setCurrentPage(nextPage)
+    if (videoCleanupTimer.current !== null) window.clearTimeout(videoCleanupTimer.current)
+    videoCleanupTimer.current = window.setTimeout(() => {
+      setVideoPages(new Set([nextPage]))
+      videoCleanupTimer.current = null
+    }, 520)
+  }
+  const goPrevious = () => goToPage(currentPage - 1)
+  const goNext = () => goToPage(currentPage + 1)
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 1024px)')
     const updateLayout = () => {
       setItemsPerPage(media.matches ? 3 : 1)
       setCurrentPage(0)
+      setVideoPages(new Set([0]))
     }
     updateLayout()
     media.addEventListener('change', updateLayout)
     return () => media.removeEventListener('change', updateLayout)
   }, [])
 
+  useEffect(() => () => {
+    if (videoCleanupTimer.current !== null) window.clearTimeout(videoCleanupTimer.current)
+  }, [])
+
   useEffect(() => {
     document.body.style.overflow = selectedProject ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
+  }, [selectedProject])
+
+  useEffect(() => {
+    const video = modalVideoRef.current
+    if (!video || !selectedProject) return
+
+    const syncPlayback = () => {
+      if (document.hidden) {
+        if (!video.paused) video.pause()
+      } else if (video.paused) {
+        video.play().catch(() => undefined)
+      }
+    }
+
+    document.addEventListener('visibilitychange', syncPlayback)
+    syncPlayback()
+    return () => {
+      document.removeEventListener('visibilitychange', syncPlayback)
+      video.pause()
+    }
   }, [selectedProject])
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -169,7 +217,7 @@ export function Projects() {
   const navigationButtonClass = 'projects-carousel__arrow inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white shadow-[0_10px_35px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-300 hover:border-[#dc2626]/70 hover:bg-[#dc2626]/15 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:ring-offset-4 focus-visible:ring-offset-[#0a0a0a] disabled:pointer-events-none disabled:opacity-25'
 
   return (
-    <section id="work" ref={revealRef} className="relative pt-24 lg:pt-32 pb-0">
+    <section ref={revealRef} className="relative pt-24 lg:pt-32 pb-0">
       <div className="mx-auto max-w-portfolio px-8 lg:px-12 mb-10 lg:mb-14">
         <div className={`reveal ${isVisible ? 'reveal--visible' : ''}`}>
           <span className="section-label">Selected Work · 精选作品</span>
@@ -224,7 +272,7 @@ export function Projects() {
                     >
                       <BorderGlow glowColor="0 84% 60%" backgroundColor="#0a0a0a" borderRadius={16} glowRadius={30} glowIntensity={1.2} coneSpread={25} colors={['#dc2626', '#ef4444', '#7f1d1d']} className="h-full">
                         <div className="relative h-full w-full overflow-hidden" style={{ background: project.gradient }}>
-                          <ProjectPreview project={project} active={pageIndex === currentPage} />
+                          {isVisible && videoPages.has(pageIndex) ? <ProjectPreview project={project} /> : null}
                           <div className="absolute inset-0" style={{ background: project.pattern }} />
                           <div className="project-card__overlay" />
                           <div className="absolute bottom-0 left-0 right-0 p-7 lg:p-8">
@@ -284,7 +332,7 @@ export function Projects() {
               <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 font-display text-xs text-white/50">{selectedProject.year}</span>
             </div>
             <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_0_80px_rgba(220,38,38,0.15)]">
-              <video className="max-h-[80vh] h-auto w-full object-contain" poster={selectedProject.poster} autoPlay controls loop playsInline preload="metadata">
+              <video ref={modalVideoRef} className="max-h-[80vh] h-auto w-full object-contain" poster={selectedProject.poster} autoPlay controls loop playsInline preload="metadata">
                 {selectedProject.videoWebm && <source src={selectedProject.videoWebm} type="video/webm" />}
                 <source src={selectedProject.videoMp4} type="video/mp4" />
               </video>

@@ -10,7 +10,7 @@ export function About() {
   const { ref, isVisible } = useScrollReveal<HTMLDivElement>()
 
   return (
-    <section id="about" ref={ref} className="relative py-24 lg:py-32 overflow-hidden">
+    <section ref={ref} className="relative py-24 lg:py-32 overflow-hidden">
       <div className="mx-auto max-w-portfolio px-8 lg:px-12">
         <div className={`reveal ${isVisible ? 'reveal--visible' : ''}`}>
           <span className="section-label">ABOUT ME · 关于我</span>
@@ -21,8 +21,8 @@ export function About() {
             <div className="relative h-full">
               <div className="avatar-frame relative h-full min-h-[300px] rounded-2xl overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.06)]">
                 <img
-                  src={`${import.meta.env.BASE_URL}about-portrait.webp`}
-                  srcSet={`${import.meta.env.BASE_URL}about-portrait-640.webp 640w, ${import.meta.env.BASE_URL}about-portrait-1024.webp 1024w, ${import.meta.env.BASE_URL}about-portrait.webp 1445w`}
+                  src={isVisible ? `${import.meta.env.BASE_URL}about-portrait.webp` : undefined}
+                  srcSet={isVisible ? `${import.meta.env.BASE_URL}about-portrait-640.webp 640w, ${import.meta.env.BASE_URL}about-portrait-1024.webp 1024w, ${import.meta.env.BASE_URL}about-portrait.webp 1445w` : undefined}
                   sizes="(max-width: 1023px) calc(100vw - 4rem), 34vw"
                   alt="MIUYU portrait"
                   width="1445"

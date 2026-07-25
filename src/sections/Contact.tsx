@@ -5,7 +5,7 @@ export function Contact() {
   const { ref, isVisible } = useScrollReveal<HTMLDivElement>()
 
   return (
-    <section id="contact" ref={ref} className="relative min-h-screen flex flex-col justify-center overflow-hidden">
+    <section ref={ref} className="relative min-h-screen flex flex-col justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gold/[0.04] rounded-full blur-[150px]" />
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-500/[0.03] rounded-full blur-[120px]" />

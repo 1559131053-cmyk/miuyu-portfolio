@@ -242,20 +242,51 @@ export default function SoftAurora({
       interactionTarget.addEventListener('mouseleave', handleMouseLeave)
     }
 
-    let animationFrameId = 0
+    let animationFrameId: number | null = null
+    let isInViewport = false
+
     const update = (time: number) => {
-      animationFrameId = requestAnimationFrame(update)
+      animationFrameId = null
+      if (!isInViewport || document.hidden) return
+
       program.uniforms.uTime.value = time * 0.001
       currentMouse[0] += 0.05 * (targetMouse[0] - currentMouse[0])
       currentMouse[1] += 0.05 * (targetMouse[1] - currentMouse[1])
       program.uniforms.uMouse.value[0] = currentMouse[0]
       program.uniforms.uMouse.value[1] = currentMouse[1]
       renderer.render({ scene: mesh })
+
+      animationFrameId = requestAnimationFrame(update)
     }
-    animationFrameId = requestAnimationFrame(update)
+
+    const startAnimation = () => {
+      if (animationFrameId !== null || !isInViewport || document.hidden) return
+      animationFrameId = requestAnimationFrame(update)
+    }
+
+    const stopAnimation = () => {
+      if (animationFrameId === null) return
+      cancelAnimationFrame(animationFrameId)
+      animationFrameId = null
+    }
+
+    const syncAnimation = () => {
+      if (isInViewport && !document.hidden) startAnimation()
+      else stopAnimation()
+    }
+
+    const visibilityObserver = new IntersectionObserver(([entry]) => {
+      isInViewport = entry.isIntersecting
+      syncAnimation()
+    }, { threshold: 0.01 })
+
+    visibilityObserver.observe(container)
+    document.addEventListener('visibilitychange', syncAnimation)
 
     return () => {
-      cancelAnimationFrame(animationFrameId)
+      stopAnimation()
+      visibilityObserver.disconnect()
+      document.removeEventListener('visibilitychange', syncAnimation)
       resizeObserver.disconnect()
       if (enableMouseInteraction) {
         interactionTarget.removeEventListener('mousemove', handleMouseMove)
