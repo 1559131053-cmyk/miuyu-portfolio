@@ -30,7 +30,6 @@ const debounce = <T extends (...args: unknown[]) => void>(func: T, delay: number
 interface TextPressureProps {
   text?: string
   fontFamily?: string
-  fontUrl?: string
   width?: boolean
   weight?: boolean
   italic?: boolean
@@ -48,7 +47,6 @@ interface TextPressureProps {
 const TextPressure = ({
   text = 'Compressa',
   fontFamily = 'Roboto Flex',
-  fontUrl = 'https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&display=swap',
 
   width = true,
   weight = true,
@@ -211,8 +209,6 @@ const TextPressure = ({
   const styleElement = useMemo(() => {
     return (
       <style>{`
-        @import url('${fontUrl}');
-
         .text-pressure-flex {
           display: flex;
           justify-content: space-between;
@@ -238,7 +234,7 @@ const TextPressure = ({
         }
       `}</style>
     )
-  }, [fontUrl, textColor, strokeColor])
+  }, [textColor, strokeColor])
 
   const dynamicClassName = [
     className,

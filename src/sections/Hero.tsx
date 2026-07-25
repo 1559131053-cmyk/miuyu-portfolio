@@ -201,7 +201,6 @@ export function Hero() {
             <TextPressure
               text="miuyu"
               fontFamily="Roboto Flex"
-              fontUrl="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&display=swap"
               flex={true}
               alpha={true}
               stroke={false}
